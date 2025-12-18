@@ -230,43 +230,48 @@
         document.getElementById('feedback').className = 'feedback-area hidden'; 
     }
 
-    function submitAnswer() {
-        const input = document.getElementById('quiz-input');
-        const userAns = input.value.trim();
-        const correctAns = currentQ.a.trim();
-        
-        if(!userAns) return; 
+function submitAnswer() {
+    const input = document.getElementById('quiz-input');
+    const userAns = input.value.trim();
+    const correctAns = currentQ.a.trim();
+    
+    if(!userAns) return; 
 
-        input.disabled = true;
+    input.disabled = true;
 
-        const feedback = document.getElementById('feedback');
-        const feedbackMsg = document.getElementById('feedback-msg');
-        const correctShow = document.getElementById('correct-answer-show');
-        
-        feedback.classList.remove('wrong', 'correct'); 
+    const feedback = document.getElementById('feedback');
+    const feedbackMsg = document.getElementById('feedback-msg');
+    const correctShow = document.getElementById('correct-answer-show');
+    
+    feedback.classList.remove('wrong', 'correct'); 
 
-        // 정답 비교 (대소문자 무시)
-        if(userAns.toLowerCase() === correctAns.toLowerCase()) {
-            // 정답
-            feedback.classList.add('correct');
-            feedbackMsg.innerText = "🙆‍♂️ 정답입니다!";
-            correctShow.innerText = ""; 
-        } else {
-            // 오답
-            feedback.classList.add('wrong');
-            feedbackMsg.innerText = "🙅‍♂️ 틀렸습니다.";
-            correctShow.innerText = `정답: ${currentQ.a}`;
-            
-            // 틀린 문제는 재시도 큐에 추가
-            retryQueue.push(currentQ);
-        }
+    // 👇 [유연한 채점 로직 추가] 띄어쓰기 및 특수문자 제거 함수
+    const cleanText = (str) => {
+        // 한글, 영문, 숫자만 남기고 모든 기호와 공백을 제거합니다.
+        return str.replace(/[^a-zA-Z0-9가-힣]/g, "").toLowerCase();
+    };
+
+    // 정화된 텍스트로 비교 (예: "6.25 전쟁" 과 "625전쟁"을 똑같이 인식)
+    if(cleanText(userAns) === cleanText(correctAns)) {
+        // 정답
+        feedback.classList.add('correct');
+        feedbackMsg.innerText = "🙆‍♂️ 정답입니다!";
+        correctShow.innerText = ""; 
+    } else {
+        // 오답
+        feedback.classList.add('wrong');
+        feedbackMsg.innerText = "🙅‍♂️ 틀렸습니다.";
+        // 실제 시트에 적힌 정답을 보여줍니다.
+        correctShow.innerText = `정답: ${currentQ.a}`;
         
-        // UI 업데이트 (버튼 전환 및 피드백 박스 보이게 하기)
-        document.getElementById('btn-submit').classList.add('hidden');
-        document.getElementById('btn-next').classList.remove('hidden');
-        document.getElementById('btn-next').focus();
-        feedback.classList.remove('hidden'); 
+        retryQueue.push(currentQ);
     }
+    
+    document.getElementById('btn-submit').classList.add('hidden');
+    document.getElementById('btn-next').classList.remove('hidden');
+    document.getElementById('btn-next').focus();
+    feedback.classList.remove('hidden'); 
+}
 
     function nextQuestion() {
         loadNextQuestion();
