@@ -3,279 +3,376 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>암기장 </title>
+    <title>천안여고 진로 맞춤 과목 설계</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
-        /* 변수 설정 */
-        :root { --primary: #4f46e5; --bg: #f8fafc; --card: #ffffff; --text: #334155; --success: #22c55e; --error: #ef4444; }
+        @import url('https://fonts.googleapis.com/css2?family=Pretendard:wght@400;600;700&display=swap');
+        body { font-family: 'Pretendard', sans-serif; background-color: #f8fafc; color: #1e293b; }
+        .glass-card { background: white; border-radius: 1.25rem; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); border: 1px solid #e2e8f0; }
+        .category-card { transition: all 0.3s; cursor: pointer; border: 2px solid transparent; }
+        .category-card:hover { transform: translateY(-5px); box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); }
+        .category-selected { border-color: #3b82f6; background-color: #eff6ff; }
+        .subject-btn { transition: all 0.2s; cursor: pointer; user-select: none; border: 1px solid #e2e8f0; font-size: 0.85rem; display: flex; align-items: center; justify-content: space-between; min-height: 3rem; }
+        .selected { background-color: #2563eb !important; color: white !important; border-color: #1d4ed8 !important; font-weight: 700; }
+        .disabled { opacity: 0.3; cursor: not-allowed; background-color: #f1f5f9 !important; pointer-events: none; }
+        .hierarchy-locked { border-color: #fca5a5 !important; background-color: #fef2f2 !important; color: #ef4444 !important; cursor: not-allowed; }
+        .limit-badge { font-size: 0.75rem; padding: 0.125rem 0.5rem; border-radius: 9999px; font-weight: 600; }
+        .limit-normal { background-color: #f1f5f9; color: #64748b; }
+        .limit-full { background-color: #dcfce7; color: #166534; }
         
-        /* 기본 스타일 및 모바일 반응형 */
-        body { font-family: 'Pretendard', sans-serif; background: var(--bg); color: var(--text); display: flex; justify-content: center; min-height: 100vh; margin: 0; padding: 20px; box-sizing: border-box; }
-        .container { width: 100%; max-width: 600px; background: var(--card); padding: 2rem; border-radius: 16px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); }
-        h1, h2 { text-align: center; color: #1e293b; margin-bottom: 10px; }
-        
-        /* Inputs & Buttons */
-        input, textarea { width: 100%; padding: 12px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 1rem; box-sizing: border-box; }
-        .btn { display: block; width: 100%; padding: 14px; background: var(--primary); color: white; border: none; border-radius: 8px; font-size: 1rem; cursor: pointer; font-weight: bold; margin-top: 10px; transition: 0.2s; }
-        .btn:hover { opacity: 0.9; }
-        .btn-outline { background: transparent; border: 2px solid var(--primary); color: var(--primary); margin-top: 5px; }
-        
-        /* Quiz UI */
-        .quiz-status { display: flex; justify-content: space-between; color: #64748b; font-size: 0.9rem; margin-bottom: 20px; }
-        .question-box { font-size: 1.4rem; font-weight: bold; text-align: center; margin: 30px 0; word-break: keep-all; }
-        
-        .feedback-area { 
-            margin-top: 20px; 
-            padding: 15px; 
-            border-radius: 8px; 
-            text-align: center; 
-            min-height: 50px; 
+        /* 인쇄 스타일 개선 */
+        @media print { 
+            .no-print { display: none !important; }
+            body { background-color: white; padding-bottom: 0; }
+            .glass-card { box-shadow: none; border: 1px solid #e2e8f0; margin-bottom: 1rem; }
+            .selected { 
+                background-color: #2563eb !important; 
+                color: white !important; 
+                -webkit-print-color-adjust: exact; 
+                print-color-adjust: exact;
+                border-color: #1d4ed8 !important;
+                opacity: 1 !important;
+            }
+            .subject-btn:not(.selected) {
+                opacity: 0.15 !important;
+                background-color: transparent !important;
+                border-color: #cbd5e1 !important;
+                color: #94a3b8 !important;
+            }
+            .limit-badge { display: none; }
         }
-        
-        .feedback-area.correct { background: #dcfce7; color: #166534; border: 1px solid #86efac; }
-        .feedback-area.wrong { background: #fee2e2; color: #991b1b; border: 1px solid #fca5a5; }
-        .correct-answer-display { font-weight: bold; font-size: 1.1rem; margin-top: 5px; }
-
-        /* Helpers */
-        .hidden { display: none !important; }
     </style>
 </head>
-<body>
+<body class="pb-32">
 
-<div class="container">
-    <div id="setup-view">
-        <h1>🔗 구글 시트 연결</h1>
-        <p style="text-align:center; color:#64748b; font-size:0.9rem;">시트 공유 설정을 '공개'로 바꾸고, 시트 ID를 입력하세요.</p>
-        <input type="text" id="sheet-id-input" placeholder="여기에 시트 ID를 붙여넣으세요">
-        <button class="btn" onclick="saveSheetId()">✔️ 시트 ID 저장</button>
-        <div id="current-sheet-status" style="margin-top:15px; text-align:center; color:#10b981; font-weight:bold;"></div>
+    <div class="max-w-6xl mx-auto px-4 py-8">
+        <section id="career-section" class="mb-12">
+            <div class="text-center mb-10">
+                <h1 class="text-3xl font-black text-slate-900 mb-3">🎓 천안여고 진로 맞춤형 과목 설계</h1>
+                <p class="text-slate-500">원하는 계열과 세부 전공을 선택하세요. 최적화된 추천 과목이 자동 배치됩니다.</p>
+            </div>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8" id="category-grid"></div>
+            <div id="sub-category-area" class="hidden glass-card p-6 mb-8 bg-blue-50/50 border-blue-100">
+                <p class="text-sm font-bold text-blue-600 mb-4 uppercase tracking-wider">세부 전공 분야 선택</p>
+                <div class="flex flex-wrap gap-3" id="sub-category-grid"></div>
+            </div>
+        </section>
 
-        <h2 style="margin-top:40px;">🔥 퀴즈 시작</h2>
-        <button class="btn" style="background:#10b981;" onclick="loadAndStartQuiz()">데이터 로드 및 암기 시작</button>
-        
-        <p style="margin-top:20px; border-top:1px solid #e2e8f0; padding-top:10px; text-align:center; font-size:0.9rem;">
-            <a href="https://docs.google.com/spreadsheets/d/148tD5R801q1J1nL_Yj2nE-o-T2hE7f8y/edit#gid=0" target="_blank">예시 시트 보기</a>
-        </p>
-    </div>
-    
-    <div id="loading-view" class="hidden" style="text-align:center; margin-top:50px;">
-        <h2 id="loading-message">데이터를 로드하는 중입니다...</h2>
-        <div class="loader" style="margin-top:20px;"></div>
-    </div>
-
-    <div id="quiz-view" class="hidden">
-        <div class="quiz-status">
-            <span>남은 문제: <b id="remain-count">0</b></span>
-            <span class="badge" id="round-badge">1라운드</span>
+        <div id="main-simulator" class="grid lg:grid-cols-3 gap-8 hidden">
+            <div class="lg:col-span-2 space-y-8" id="semester-list"></div>
+            <div class="space-y-6">
+                <div class="glass-card p-6 sticky top-8">
+                    <div class="mb-4">
+                        <h3 class="text-lg font-bold flex items-center mb-1">
+                            <i class="fas fa-user-graduate mr-3 text-blue-600"></i>나의 선택
+                        </h3>
+                        <p id="display-career" class="text-sm text-slate-500 font-medium">선택되지 않음</p>
+                    </div>
+                    
+                    <h3 class="text-lg font-bold mb-4 border-t pt-4 flex items-center">
+                        <i class="fas fa-clipboard-check mr-3 text-emerald-600"></i>설계 검토
+                    </h3>
+                    <div class="space-y-4 mb-8" id="checklist">
+                        <div data-id="core" class="flex items-start gap-3 text-slate-400">
+                            <i class="fas fa-circle-notch mt-1 text-xs"></i>
+                            <p class="text-xs">수능 필수 과목 이수 (8개)</p>
+                        </div>
+                        <div data-id="grad-social" class="flex items-start gap-3 text-slate-400">
+                            <i class="fas fa-circle-notch mt-1 text-xs"></i>
+                            <p class="text-xs">사회탐구 1과목 이상 선택</p>
+                        </div>
+                        <div data-id="grad-science" class="flex items-start gap-3 text-slate-400">
+                            <i class="fas fa-circle-notch mt-1 text-xs"></i>
+                            <p class="text-xs">과학탐구 1과목 이상 선택</p>
+                        </div>
+                        <!-- '국영수 분산 권장' 항목은 UI에서 숨김 처리됨 (로직은 유지) -->
+                        <div data-id="balance" class="hidden flex items-start gap-3 text-slate-400">
+                            <i class="fas fa-circle-notch mt-1 text-xs"></i>
+                            <p class="text-xs">국영수 학기당 1개 분산 권장</p>
+                        </div>
+                        <div data-id="hier" class="flex items-start gap-3 text-slate-400">
+                            <i class="fas fa-circle-notch mt-1 text-xs"></i>
+                            <p class="text-xs">과학 위계 준수 (병행 불가)</p>
+                        </div>
+                    </div>
+                    <div class="space-y-3">
+                        <button onclick="window.print()" class="w-full py-3 rounded-xl bg-blue-600 text-white font-bold no-print hover:bg-blue-700 transition-colors">인쇄 및 저장</button>
+                        <button onclick="location.reload()" class="w-full py-3 rounded-xl bg-slate-100 text-slate-600 font-bold no-print hover:bg-slate-200 transition-colors">처음으로</button>
+                    </div>
+                </div>
+            </div>
         </div>
-
-        <div class="question-box" id="question-display"></div>
-
-        <input type="text" id="quiz-input" placeholder="정답을 입력하세요" autocomplete="off" onkeypress="handleEnter(event, 'submit')">
-        
-        <button class="btn" id="btn-submit" onclick="submitAnswer()">제출</button>
-        <button class="btn hidden" id="btn-next" onclick="nextQuestion()">다음 문제 ➡️</button>
-
-        <div id="feedback" class="feedback-area hidden">
-            <div id="feedback-msg"></div>
-            <div id="correct-answer-show" class="correct-answer-display"></div>
-        </div>
     </div>
 
-    <div id="finish-view" class="hidden" style="text-align:center;">
-        <h1 style="font-size:3rem; margin-bottom:0;">🎉</h1>
-        <h2>완벽하게 암기했습니다!</h2>
-        <p>틀린 문제 없이 모든 과정을 통과하셨습니다.</p>
-        <button class="btn" onclick="location.reload()">처음으로 돌아가기</button>
-    </div>
-</div>
+    <script>
+        const semesterData = {
+            "2-1": { limit: 6, list: ["문학", "대수", "영어Ⅰ", "세계사", "정치", "경제", "세계시민과 지리", "윤리와 사상", "법과 사회", "물리학", "화학", "생명과학", "지구과학", "기후변화와 환경생태", "프로그래밍", "데이터 과학", "인공지능 기초"] },
+            "2-2": { limit: 6, list: ["독서와 작문", "화법과 언어", "미적분Ⅰ", "확률과 통계", "기하", "영어Ⅱ", "영어 독해와 작문", "사회와 문화", "한국지리 탐구", "역학과 에너지", "전자기와 양자", "물질과 에너지", "화학 반응의 세계", "세포와 물질대사", "생물의 유전", "지구시스템과학", "행성우주과학", "인공지능 기초"] },
+            "3-1": { limit: 6, list: ["독서와 작문", "화법과 언어", "미적분Ⅰ", "확률과 통계", "기하", "영어Ⅱ", "영어 독해와 작문", "미적분Ⅱ", "경제 수학", "수학과제 탐구", "심화 영어", "역학과 에너지", "전자기와 양자", "물질과 에너지", "화학 반응의 세계", "세포와 물질대사", "생물의 유전", "지구시스템과학", "행성우주과학", "융합과학 탐구"] },
+            "3-2": { limit: 5, list: ["독서 토론과 글쓰기", "매체 의사소통", "미적분Ⅱ", "경제 수학", "수학과제 탐구", "심화 영어", "융합과학 탐구", "생활과학 탐구", "역사로 탐구하는 현대 세계", "도시의 미래 탐구", "현대사회와 윤리"] }
+        };
 
-<script>
-    // 데이터 저장소
-    let allQuestions = []; 
-    let quizQueue = [];    
-    let retryQueue = [];   
-    let currentQ = null;   
-    let round = 1;
-    let sheetId = '';
-    const STORAGE_KEY = 'SpartaSheetId';
+        // 사회/과학 과목 분류 (졸업 요건 체크용)
+        const socialSubjects = ["세계사", "정치", "경제", "세계시민과 지리", "윤리와 사상", "법과 사회", "사회와 문화", "한국지리 탐구", "역사로 탐구하는 현대 세계", "도시의 미래 탐구", "현대사회와 윤리"];
+        const scienceSubjects = ["물리학", "화학", "생명과학", "지구과학", "기후변화와 환경생태", "역학과 에너지", "전자기와 양자", "물질과 에너지", "화학 반응의 세계", "세포와 물질대사", "생물의 유전", "지구시스템과학", "행성우주과학", "융합과학 탐구", "생활과학 탐구"];
 
-    // --- 1. 초기화 및 ID 로드 ---
-    window.onload = function() {
-        // 로컬 저장소에서 시트 ID 로드
-        const savedId = localStorage.getItem(STORAGE_KEY);
-        if (savedId) {
-            sheetId = savedId;
-            document.getElementById('sheet-id-input').value = savedId;
-            document.getElementById('current-sheet-status').innerText = '✅ 시트 ID가 저장되었습니다.';
+        const careers = {
+            "의료/보건": { icon: "fa-stethoscope", isScience: true, subs: { 
+                "의예/치의예/한의예": ["화학", "생명과학", "세포와 물질대사", "생물의 유전", "융합과학 탐구"],
+                "간호/약학/보건": ["화학", "생명과학", "물질과 에너지", "세포와 물질대사", "생활과학 탐구"]
+            }},
+            "공학/IT/제조": { icon: "fa-microchip", isScience: true, subs: { 
+                "컴퓨터/AI/소프트웨어": ["물리학", "프로그래밍", "인공지능 기초", "데이터 과학", "전자기와 양자"],
+                "전기/전자/기계": ["물리학", "화학", "기하", "역학과 에너지", "전자기와 양자"]
+            }},
+            "자연과학/기초과학": { icon: "fa-atom", isScience: true, subs: { 
+                "화학/생명과학과": ["화학", "생명과학", "물질과 에너지", "화학 반응의 세계", "세포와 물질대사"],
+                "수학/물리/천문": ["물리학", "지구과학", "기하", "역학과 에너지", "행성우주과학"]
+            }},
+            "인문/외국어": { icon: "fa-book", isScience: false, subs: { 
+                "어문학/통번역": ["세계사", "윤리와 사상", "영어 독해와 작문", "심화 영어", "매체 의사소통"],
+                "철학/사학/문화": ["세계사", "윤리와 사상", "한국지리 탐구", "독서 토론과 글쓰기", "역사로 탐구하는 현대 세계"]
+            }},
+            "사회과학/법정": { icon: "fa-balance-scale", isScience: false, subs: { 
+                "법학/행정/정치": ["정치", "법과 사회", "사회와 문화", "현대사회와 윤리", "매체 의사소통"],
+                "심리/사회학/언론": ["정치", "사회와 문화", "윤리와 사상", "데이터 과학", "매체 의사소통"]
+            }},
+            "경영/경제/통계": { icon: "fa-chart-line", isScience: false, subs: { 
+                "경영학/회계": ["경제", "정치", "확률과 통계", "사회와 문화", "영어 독해와 작문"],
+                "경제학/응용통계": ["경제", "대수", "미적분Ⅰ", "확률과 통계", "경제 수학"]
+            }},
+            "교육/사범": { icon: "fa-chalkboard-teacher", isScience: false, subs: { 
+                "초등교육": ["세계시민과 지리", "윤리와 사상", "생활과학 탐구", "수학과제 탐구", "사회와 문화"],
+                "중등교육(교과별)": ["윤리와 사상", "사회와 문화", "매체 의사소통", "심화 영어", "역사로 탐구하는 현대 세계"]
+            }},
+            "예술/체육/융합": { icon: "fa-palette", isScience: false, subs: { 
+                "디자인/미술": ["세계사", "기후변화와 환경생태", "프로그래밍", "인공지능 기초", "매체 의사소통"],
+                "체육/미디어": ["정치", "사회와 문화", "생활과학 탐구", "매체 의사소통", "도시의 미래 탐구"]
+            }}
+        };
+
+        const hierarchy = { 
+            "역학과 에너지": "물리학", "전자기와 양자": "물리학", 
+            "물질과 에너지": "화학", "화학 반응의 세계": "화학", 
+            "세포와 물질대사": "생명과학", "생물의 유전": "생명과학", 
+            "지구시스템과학": "지구과학", "행성우주과학": "지구과학" 
+        };
+
+        let selected = { "2-1": [], "2-2": [], "3-1": [], "3-2": [] };
+
+        function init() {
+            const grid = document.getElementById('category-grid');
+            for (let cat in careers) {
+                const card = document.createElement('div');
+                card.className = "glass-card p-5 text-center category-card flex flex-col items-center justify-center";
+                card.innerHTML = `<i class="fas ${careers[cat].icon} text-2xl mb-3 text-blue-600"></i><h3 class="font-bold text-sm text-slate-700">${cat}</h3>`;
+                card.onclick = () => {
+                    document.querySelectorAll('.category-card').forEach(c => c.classList.remove('category-selected'));
+                    card.classList.add('category-selected');
+                    showSubs(cat);
+                };
+                grid.appendChild(card);
+            }
         }
-    };
 
-    function saveSheetId() {
-        const id = document.getElementById('sheet-id-input').value.trim();
-        if(!id) return alert("시트 ID를 입력해주세요.");
-        sheetId = id.includes('/d/') ? id.split('/d/')[1].split('/')[0] : id; // 전체 URL이 들어와도 ID만 추출
-        localStorage.setItem(STORAGE_KEY, sheetId);
-        document.getElementById('current-sheet-status').innerText = '✅ 시트 ID가 성공적으로 저장되었습니다.';
-    }
-
-    // --- 2. Sheets 데이터 로드 ---
-    async function loadAndStartQuiz() {
-        if(!sheetId) {
-            alert("시트 ID를 먼저 저장해주세요!");
-            return;
+        function showSubs(cat) {
+            const area = document.getElementById('sub-category-area');
+            const grid = document.getElementById('sub-category-grid');
+            area.classList.remove('hidden');
+            grid.innerHTML = '';
+            Object.keys(careers[cat].subs).forEach(sub => {
+                const b = document.createElement('button');
+                b.className = "px-5 py-2.5 bg-white border border-blue-200 rounded-xl font-bold text-sm text-blue-700 hover:bg-blue-600 hover:text-white transition-all";
+                b.innerText = sub;
+                b.onclick = () => start(cat, sub);
+                grid.appendChild(b);
+            });
         }
 
-        // 로딩 화면 표시
-        document.getElementById('setup-view').classList.add('hidden');
-        document.getElementById('loading-view').classList.remove('hidden');
-        document.getElementById('loading-message').innerText = '데이터를 로드하는 중입니다...';
+        function start(cat, sub) {
+            document.getElementById('career-section').classList.add('hidden');
+            document.getElementById('main-simulator').classList.remove('hidden');
+            document.getElementById('display-career').innerText = `${cat} > ${sub}`;
+            renderGrids();
+            autoPlace(cat, sub);
+        }
 
-        // Google Sheets API URL (Sheet1의 A열과 B열 데이터)
-        const sheetUrl = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&tq=SELECT%20A%2C%20B`;
+        function renderGrids() {
+            const root = document.getElementById('semester-list');
+            root.innerHTML = '';
+            for (let sem in semesterData) {
+                const card = document.createElement('div');
+                card.className = "glass-card p-6";
+                card.innerHTML = `
+                    <div class="flex justify-between items-center mb-4">
+                        <h2 class="font-bold text-slate-800 border-l-4 border-blue-500 pl-3">${sem.replace('-','학년 ')}학기</h2>
+                        <span id="counter-${sem}" class="limit-badge limit-normal">0 / ${semesterData[sem].limit} 선택됨</span>
+                    </div>
+                    <div class="grid grid-cols-2 md:grid-cols-3 gap-2" id="grid-${sem}"></div>
+                `;
+                root.appendChild(card);
+                semesterData[sem].list.sort().forEach(item => {
+                    const btn = document.createElement('div');
+                    btn.className = "subject-btn p-3 rounded-lg border bg-white hover:border-blue-400 transition-colors";
+                    btn.id = `btn-${sem}-${item}`;
+                    btn.innerHTML = `<span class="pr-2 leading-tight">${item}</span>`;
+                    btn.onclick = () => toggle(sem, item);
+                    document.getElementById(`grid-${sem}`).appendChild(btn);
+                });
+            }
+        }
 
-        try {
-            const response = await fetch(sheetUrl);
-            const dataText = await response.text();
+        function autoPlace(cat, sub) {
+            const isScienceTrack = careers[cat].isScience;
             
-            // JSONP 형식의 응답을 JSON 객체로 파싱
-            const jsonText = dataText.substring(dataText.indexOf('{'), dataText.lastIndexOf('}') + 1);
-            const data = JSON.parse(jsonText);
+            const basic = [
+                {sem: "2-1", subjects: ["문학", "대수", "영어Ⅰ"]},
+                {sem: "2-2", subjects: ["독서와 작문", "영어Ⅱ", "미적분Ⅰ", isScienceTrack ? "기하" : "확률과 통계"].filter(s => s)},
+                {sem: "3-1", subjects: ["화법과 언어", isScienceTrack ? "확률과 통계" : "영어 독해와 작문", isScienceTrack ? "미적분Ⅱ" : "독서와 작문"].filter(s => s)}
+            ];
 
-            // 데이터 추출
-            const rows = data.table.rows;
-            allQuestions = [];
+            selected = { "2-1": [], "2-2": [], "3-1": [], "3-2": [] };
             
-            // 첫 번째 행은 헤더이므로 스킵
-            for (let i = 1; i < rows.length; i++) {
-                const q = rows[i].c[0]?.v; // A열 (문제)
-                const a = rows[i].c[1]?.v; // B열 (정답)
-                
-                if (q && a) {
-                    allQuestions.push({ q: q.toString().trim(), a: a.toString().trim() });
+            basic.forEach(b => {
+                b.subjects.forEach(s => {
+                   if (semesterData[b.sem].list.includes(s) && selected[b.sem].length < semesterData[b.sem].limit) {
+                       selected[b.sem].push(s);
+                   }
+                });
+            });
+            
+            const recommended = careers[cat].subs[sub];
+            recommended.forEach(s => {
+                const order = ["2-1", "2-2", "3-1", "3-2"];
+                for(let sem of order) {
+                    let exists = false;
+                    for(let k in selected) if(selected[k].includes(s)) exists = true;
+                    if(exists) break;
+
+                    if(semesterData[sem].list.includes(s) && selected[sem].length < semesterData[sem].limit) {
+                        if(hierarchy[s]) {
+                            const p = hierarchy[s];
+                            let pIdx = -1;
+                            order.forEach((sm, i) => { if(selected[sm].includes(p)) pIdx = i; });
+                            if(pIdx === -1 || pIdx >= order.indexOf(sem)) continue;
+                        }
+                        selected[sem].push(s); 
+                        break;
+                    }
+                }
+            });
+
+            update();
+        }
+
+        function toggle(sem, sub) {
+            const idx = selected[sem].indexOf(sub);
+            if(idx > -1) {
+                selected[sem].splice(idx, 1);
+            } else {
+                let allSelected = [].concat(...Object.values(selected));
+                const order = ["2-1", "2-2", "3-1", "3-2"];
+                const currentIdx = order.indexOf(sem);
+
+                if(allSelected.includes(sub)) return;
+                if(selected[sem].length >= semesterData[sem].limit) return;
+
+                if(hierarchy[sub]) {
+                    const parent = hierarchy[sub];
+                    let parentIdx = -1;
+                    order.forEach((s, i) => { if(selected[s].includes(parent)) parentIdx = i; });
+                    
+                    if(parentIdx === -1 || parentIdx >= currentIdx) {
+                        return;
+                    }
+                }
+
+                selected[sem].push(sub);
+            }
+            update();
+        }
+
+        function update() {
+            const all = [].concat(...Object.values(selected));
+            const order = ["2-1", "2-2", "3-1", "3-2"];
+
+            order.forEach((sem, currentIdx) => {
+                const counter = document.getElementById(`counter-${sem}`);
+                const count = selected[sem].length;
+                const limit = semesterData[sem].limit;
+                counter.innerText = `${count} / ${limit} 선택됨`;
+                counter.className = count >= limit ? "limit-badge limit-full" : "limit-badge limit-normal";
+
+                semesterData[sem].list.forEach(sub => {
+                    const el = document.getElementById(`btn-${sem}-${sub}`);
+                    if(!el) return;
+                    el.classList.remove('selected', 'disabled', 'hierarchy-locked');
+
+                    if(selected[sem].includes(sub)) el.classList.add('selected');
+                    else if(all.includes(sub)) el.classList.add('disabled');
+                    else if(hierarchy[sub]) {
+                        const p = hierarchy[sub];
+                        let pIdx = -1;
+                        order.forEach((s, i) => { if(selected[s].includes(p)) pIdx = i; });
+                        if(pIdx === -1 || pIdx >= currentIdx) el.classList.add('hierarchy-locked');
+                    }
+                });
+            });
+
+            checkRequirements(all);
+        }
+
+        function checkRequirements(all) {
+            // 1. 수능 필수 과목
+            const coreList = ["문학", "독서와 작문", "화법과 언어", "영어Ⅰ", "영어Ⅱ", "대수", "미적분Ⅰ", "확률과 통계"];
+            const hasCore = coreList.every(s => all.includes(s));
+            setStatus('core', hasCore);
+
+            // 2. 사회/과학 졸업 요건
+            const hasSocial = all.some(s => socialSubjects.includes(s));
+            const hasScience = all.some(s => scienceSubjects.includes(s));
+            setStatus('grad-social', hasSocial);
+            setStatus('grad-science', hasScience);
+
+            // 3. 분산 권장 (내부 로직은 유지하되 UI에서 'hidden' 클래스로 숨김)
+            let balanceOk = true;
+            for(let sem in selected) {
+                let kr = selected[sem].filter(s => ["문학","독서와 작문","화법과 언어","독서 토론과 글쓰기","매체 의사소통"].includes(s)).length;
+                let en = selected[sem].filter(s => ["영어Ⅰ","영어Ⅱ","영어 독해와 작문","심화 영어"].includes(s)).length;
+                let mt = selected[sem].filter(s => ["대수","미적분Ⅰ","미적분Ⅱ","확률과 통계","기하","경제 수학"].includes(s)).length;
+                if(kr > 1 || en > 1 || mt > 1) balanceOk = false;
+            }
+            setStatus('balance', balanceOk);
+
+            // 4. 과학 위계
+            let hierOk = true;
+            for(let sub in hierarchy) {
+                if(all.includes(sub)) {
+                    let p = hierarchy[sub];
+                    let pIdx = -1, cIdx = -1;
+                    ["2-1","2-2","3-1","3-2"].forEach((s, i) => {
+                        if(selected[s].includes(p)) pIdx = i;
+                        if(selected[s].includes(sub)) cIdx = i;
+                    });
+                    if(pIdx === -1 || pIdx >= cIdx) hierOk = false;
                 }
             }
-
-            if (allQuestions.length === 0) {
-                throw new Error("시트에서 유효한 문제-정답 쌍을 찾을 수 없습니다. 시트가 비어 있거나 공유 설정이 잘못되었을 수 있습니다.");
-            }
-
-            // 로딩 화면 숨기고 퀴즈 시작
-            document.getElementById('loading-view').classList.add('hidden');
-            startQuizInit();
-
-        } catch (error) {
-            console.error("데이터 로드 실패:", error);
-            document.getElementById('loading-message').innerText = `❌ 데이터 로드 실패: ${error.message}`;
-            document.getElementById('setup-view').classList.remove('hidden');
-            document.getElementById('loading-view').classList.add('hidden');
-            alert("데이터 로드에 실패했습니다. 시트 ID와 '공개 공유 설정'을 다시 확인해주세요.");
-        }
-    }
-
-    // --- 3. 퀴즈 로직 (동일) ---
-    function handleEnter(e, type) {
-        if(e.key === 'Enter') {
-            if(type === 'submit') submitAnswer();
-        }
-    }
-
-    function startQuizInit() {
-        if(allQuestions.length === 0) return alert("데이터 없음");
-        
-        quizQueue = [...allQuestions]; 
-        retryQueue = [];
-        round = 1;
-
-        document.getElementById('setup-view').classList.add('hidden');
-        document.getElementById('quiz-view').classList.remove('hidden');
-        
-        loadNextQuestion();
-    }
-
-    function loadNextQuestion() {
-        // 큐가 비었으면 라운드 체크
-        if(quizQueue.length === 0) {
-            if(retryQueue.length === 0) {
-                // 완전 종료
-                document.getElementById('quiz-view').classList.add('hidden');
-                document.getElementById('finish-view').classList.remove('hidden');
-                return;
-            } else {
-                // 다음 라운드 시작 (틀린 문제만 다시)
-                quizQueue = [...retryQueue];
-                retryQueue = [];
-                round++;
-                alert(`🔄 ${round}라운드 시작! 틀린 문제만 다시 풉니다.`);
-            }
+            setStatus('hier', hierOk);
         }
 
-        // 문제 로드
-        currentQ = quizQueue.shift(); 
-        
-        // UI 업데이트
-        document.getElementById('round-badge').innerText = round + "라운드";
-        document.getElementById('remain-count').innerText = quizQueue.length + 1;
-        document.getElementById('question-display').innerText = currentQ.q;
-        
-        // 입력창 초기화
-        const input = document.getElementById('quiz-input');
-        input.value = '';
-        input.disabled = false;
-        input.focus();
-        
-        // 버튼 및 피드백 상태 초기화
-        document.getElementById('btn-submit').classList.remove('hidden');
-        document.getElementById('btn-next').classList.add('hidden');
-        document.getElementById('feedback').classList.add('hidden'); 
-        document.getElementById('feedback').className = 'feedback-area hidden'; 
-    }
+        function setStatus(id, ok) {
+            const row = document.querySelector(`[data-id="${id}"]`);
+            if(!row) return;
+            row.className = row.classList.contains('hidden') 
+                ? "hidden" 
+                : (ok ? "flex items-start gap-3 text-emerald-600 font-bold" : "flex items-start gap-3 text-slate-400");
+            row.querySelector('i').className = ok ? "fas fa-check-circle mt-1" : "fas fa-circle-notch mt-1";
+        }
 
-function submitAnswer() {
-    const input = document.getElementById('quiz-input');
-    const userAns = input.value.trim();
-    const correctAns = currentQ.a.trim();
-    
-    if(!userAns) return; 
-
-    input.disabled = true;
-
-    const feedback = document.getElementById('feedback');
-    const feedbackMsg = document.getElementById('feedback-msg');
-    const correctShow = document.getElementById('correct-answer-show');
-    
-    feedback.classList.remove('wrong', 'correct'); 
-
-    // 👇 [유연한 채점 로직 추가] 띄어쓰기 및 특수문자 제거 함수
-    const cleanText = (str) => {
-        // 한글, 영문, 숫자만 남기고 모든 기호와 공백을 제거합니다.
-        return str.replace(/[^a-zA-Z0-9가-힣]/g, "").toLowerCase();
-    };
-
-    // 정화된 텍스트로 비교 (예: "6.25 전쟁" 과 "625전쟁"을 똑같이 인식)
-    if(cleanText(userAns) === cleanText(correctAns)) {
-        // 정답
-        feedback.classList.add('correct');
-        feedbackMsg.innerText = "🙆‍♂️ 정답입니다!";
-        correctShow.innerText = ""; 
-    } else {
-        // 오답
-        feedback.classList.add('wrong');
-        feedbackMsg.innerText = "🙅‍♂️ 틀렸습니다.";
-        // 실제 시트에 적힌 정답을 보여줍니다.
-        correctShow.innerText = `정답: ${currentQ.a}`;
-        
-        retryQueue.push(currentQ);
-    }
-    
-    document.getElementById('btn-submit').classList.add('hidden');
-    document.getElementById('btn-next').classList.remove('hidden');
-    document.getElementById('btn-next').focus();
-    feedback.classList.remove('hidden'); 
-}
-
-    function nextQuestion() {
-        loadNextQuestion();
-    }
-</script>
+        window.onload = init;
+    </script>
+</body>
+</html>
 </body>
 </html>
