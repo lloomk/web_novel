@@ -4,10 +4,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Web Novel Viewer - Endless Scroll</title>
+    <title>Web Novel Viewer - Fixed UI</title>
     <link href="https://fonts.googleapis.com/css2?family=Nanum+Myeongjo:wght@400;700&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
+        body {
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            text-rendering: optimizeLegibility;
+        }
+
         .font-gulim { font-family: 'Gulim', 'Dotum', sans-serif !important; }
         .font-batang { font-family: 'Batang', 'AppleMyungjo', serif !important; }
         .font-myungjo { font-family: 'Nanum Myeongjo', serif !important; }
@@ -16,8 +22,8 @@
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: rgba(156, 163, 175, 0.4); border-radius: 10px; }
 
-        body { transition: background-color 0.3s, color 0.3s; overflow-x: hidden; scroll-behavior: smooth; }
-        #content { white-space: pre-wrap; line-height: 1.9; word-break: break-all; }
+        body { transition: background-color 0.2s, color 0.2s; overflow-x: hidden; scroll-behavior: smooth; }
+        #content { white-space: pre-wrap; line-height: 2.1; word-break: break-all; }
         
         .panel-transition { transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
         .hidden-panel-bottom { transform: translateY(100%); }
@@ -28,43 +34,62 @@
         .ui-hidden-bottom { opacity: 0; pointer-events: none; transform: translate(-50%, 20px); }
         .ui-hidden-right { opacity: 0; pointer-events: none; transform: scale(0.8); }
 
-        .nav-btn { @apply px-6 py-2.5 bg-gray-100 dark:bg-gray-800 rounded-full hover:bg-blue-600 hover:text-white transition-all disabled:opacity-30 font-medium shadow-sm; }
-        
-        .chapter-item { @apply flex items-center px-8 py-6 border-b border-gray-50 dark:border-gray-800/50 cursor-pointer transition-all duration-200; }
-        .chapter-item:hover { @apply bg-blue-50/50 dark:bg-gray-700/30; }
-        .active-chapter { @apply bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 font-bold border-l-4 border-l-blue-600; }
+        /* 설정창 및 목차 글자색 강제 고정 (보스 요청사항: 배경은 하양, 글자는 검정) */
+        #settings-panel, #toc-panel {
+            background-color: white !important;
+            color: #111827 !important; /* gray-900 */
+        }
+        #settings-panel *, #toc-panel * {
+            color: #111827 !important;
+        }
+        /* 다크모드에서도 설정 버튼 내부 글자는 보여야 함 */
+        #settings-panel select, #settings-panel button#close-settings {
+            background-color: #f3f4f6 !important; /* gray-100 */
+        }
+        .chapter-item {
+            border-color: #f3f4f6 !important;
+        }
+        .chapter-item:hover {
+            background-color: #eff6ff !important; /* blue-50 */
+        }
+
+        .nav-btn { @apply px-6 py-2.5 bg-gray-100 rounded-full hover:bg-blue-600 hover:text-white transition-all disabled:opacity-30 font-bold shadow-sm text-gray-900; }
         
         #touch-center { position: fixed; top: 20%; left: 15%; width: 70%; height: 60%; z-index: 5; }
 
-        /* 스크롤 유도 힌트 스타일 */
         #scroll-hint {
             position: fixed;
             left: 50%;
             transform: translateX(-50%);
-            padding: 8px 16px;
-            background: rgba(0, 0, 0, 0.7);
-            color: white;
-            border-radius: 20px;
-            font-size: 12px;
+            padding: 10px 20px;
+            background: rgba(0, 0, 0, 0.85);
+            color: #fff;
+            border-radius: 24px;
+            font-size: 13px;
+            font-weight: 700;
             z-index: 100;
             opacity: 0;
-            transition: opacity 0.3s, bottom 0.3s, top 0.3s;
+            transition: opacity 0.3s;
             pointer-events: none;
         }
+
+        /* 본문 텍스트만 다크모드 적용 */
+        .dark #content { color: #e5e7eb; }
+        .dark #viewer-placeholder { color: #4b5563; }
     </style>
 </head>
 <body class="bg-white text-gray-900 min-h-screen flex flex-col items-center">
 
     <div id="scroll-hint">다음 회차로 넘어가려면 더 당기세요</div>
 
-    <header id="header" class="ui-element w-full max-w-3xl p-4 flex justify-between items-center sticky top-0 z-20 border-b backdrop-blur-md bg-white/80 dark:bg-zinc-900/80">
+    <header id="header" class="ui-element w-full max-w-3xl p-4 flex justify-between items-center sticky top-0 z-40 border-b backdrop-blur-md bg-white/80 dark:bg-zinc-950/90 dark:border-zinc-800">
         <div class="flex items-center gap-3">
-            <button id="open-toc" class="p-2.5 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors hidden">
+            <button id="open-toc" class="p-2.5 hover:bg-gray-100 dark:hover:bg-zinc-800 rounded-full transition-colors hidden">
                 <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
             </button>
-            <span id="chapter-indicator" class="text-sm font-semibold bg-gray-100 text-gray-700 px-3 py-1 rounded-full dark:bg-gray-800 dark:text-gray-300 hidden truncate max-w-[200px]"></span>
+            <span id="chapter-indicator" class="text-sm font-bold bg-gray-100 text-gray-700 px-3 py-1 rounded-full dark:bg-zinc-800 dark:text-zinc-300 hidden truncate max-w-[200px]"></span>
         </div>
-        <label class="cursor-pointer bg-black text-white dark:bg-white dark:text-black px-5 py-2 rounded-full hover:opacity-80 transition-all text-sm font-bold">
+        <label class="cursor-pointer bg-black text-white px-5 py-2 rounded-full hover:opacity-80 transition-all text-sm font-bold">
             파일 열기
             <input type="file" id="file-input" class="hidden" accept=".txt">
         </label>
@@ -74,17 +99,16 @@
 
     <main class="w-full max-w-3xl px-6 py-12 flex-grow">
         <div id="viewer-placeholder" class="flex flex-col items-center justify-center min-h-[60vh] text-center text-gray-400">
-            <p class="text-xl font-bold text-gray-800 dark:text-gray-200">보스, 소설 파일을 올려줘!</p>
-            <p class="text-sm mt-3 font-medium">다 읽고 아래로 더 당기면 다음 회차로 넘어가.</p>
+            <p class="text-xl font-bold">파일을 업로드해주세요</p>
         </div>
 
         <div id="viewer-container" class="hidden">
-            <div id="content" class="content-area font-batang mb-20"></div>
+            <div id="content" class="content-area font-batang mb-20 text-lg text-gray-900"></div>
             
-            <div id="bottom-nav" class="ui-element fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-3xl px-6 py-8 bg-gradient-to-t from-white via-white/90 to-transparent dark:from-zinc-900 dark:via-zinc-900/90 pointer-events-none z-20">
+            <div id="bottom-nav" class="ui-element fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-3xl px-6 py-8 bg-gradient-to-t from-white via-white/95 to-transparent dark:from-zinc-950 dark:via-zinc-950/95 pointer-events-none z-20">
                 <div class="flex justify-between items-center pointer-events-auto">
                     <button id="prev-btn" class="nav-btn">이전화</button>
-                    <div class="bg-gray-900/90 backdrop-blur-md text-white px-5 py-2 rounded-full text-xs font-mono shadow-lg">
+                    <div class="bg-zinc-900 text-white px-5 py-2 rounded-full text-xs font-bold shadow-lg">
                         <span id="page-info">0 / 0</span>
                     </div>
                     <button id="next-btn" class="nav-btn">다음화</button>
@@ -93,34 +117,36 @@
         </div>
     </main>
 
-    <button id="toggle-settings" class="ui-element fixed bottom-24 right-6 w-14 h-14 bg-white dark:bg-gray-800 text-gray-800 dark:text-white rounded-2xl shadow-xl flex items-center justify-center z-20 border border-gray-100 dark:border-gray-700">
+    <button id="toggle-settings" class="ui-element fixed bottom-24 right-6 w-14 h-14 bg-white text-gray-800 rounded-2xl shadow-xl flex items-center justify-center z-40 border border-gray-100">
         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
     </button>
 
-    <div id="toc-panel" class="fixed top-0 right-0 h-full w-full sm:w-[400px] bg-white dark:bg-zinc-900 shadow-2xl z-40 panel-transition hidden-panel-right border-l border-gray-100 dark:border-gray-800 flex flex-col">
-        <div class="p-6 border-b border-gray-100 dark:border-gray-800 flex justify-between items-center">
-            <h2 class="font-black text-xl tracking-tighter dark:text-white uppercase">TOC</h2>
-            <button id="close-toc" class="p-2 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-full transition-colors text-gray-400">
+    <div id="overlay" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-45 hidden transition-opacity duration-300"></div>
+
+    <div id="toc-panel" class="fixed top-0 right-0 h-full w-full sm:w-[400px] shadow-2xl z-50 panel-transition hidden-panel-right border-l border-gray-100 flex flex-col">
+        <div class="p-6 border-b border-gray-100 flex justify-between items-center">
+            <h2 class="font-black text-xl tracking-tighter uppercase">목차</h2>
+            <button id="close-toc" class="p-2 hover:bg-gray-100 rounded-full transition-colors text-gray-400">
                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
             </button>
         </div>
         <div id="chapter-list" class="flex-grow overflow-y-auto pb-10"></div>
     </div>
 
-    <div id="settings-panel" class="fixed bottom-0 left-0 w-full bg-white dark:bg-zinc-900 border-t border-gray-200 dark:border-gray-800 p-8 z-30 panel-transition hidden-panel-bottom shadow-2xl rounded-t-[32px] flex flex-col items-center">
+    <div id="settings-panel" class="fixed bottom-0 left-0 w-full border-t border-gray-200 p-8 z-50 panel-transition hidden-panel-bottom shadow-2xl rounded-t-[32px] flex flex-col items-center">
         <div class="w-full max-w-md space-y-8">
-            <h2 class="text-xl font-black tracking-tight dark:text-white uppercase">Display Settings</h2>
+            <h2 class="text-xl font-black tracking-tight uppercase">설정</h2>
             <div class="space-y-6">
                 <div class="flex justify-between items-center">
-                    <span class="text-sm font-bold text-gray-500 uppercase">Theme</span>
-                    <div class="flex gap-2 p-1 bg-gray-100 dark:bg-gray-800 rounded-xl">
-                        <button id="btn-light" class="px-5 py-2 rounded-lg text-sm font-bold transition-all">Light</button>
-                        <button id="btn-dark" class="px-5 py-2 rounded-lg text-sm font-bold transition-all">Dark</button>
+                    <span class="text-sm font-bold text-gray-500 uppercase">테마</span>
+                    <div class="flex gap-2 p-1 bg-gray-100 rounded-xl">
+                        <button id="btn-light" class="px-5 py-2 rounded-lg text-sm font-bold transition-all">라이트</button>
+                        <button id="btn-dark" class="px-5 py-2 rounded-lg text-sm font-bold transition-all">다크</button>
                     </div>
                 </div>
                 <div class="flex justify-between items-center">
-                    <span class="text-sm font-bold text-gray-500 uppercase">Font</span>
-                    <select id="font-family-select" class="bg-gray-100 dark:bg-gray-800 rounded-xl px-4 py-2.5 text-sm font-bold dark:text-white">
+                    <span class="text-sm font-bold text-gray-500 uppercase">글꼴</span>
+                    <select id="font-family-select" class="bg-gray-100 rounded-xl px-4 py-2.5 text-sm font-bold">
                         <option value="font-gulim">굴림체</option>
                         <option value="font-batang">바탕체</option>
                         <option value="font-myungjo">명조체</option>
@@ -128,20 +154,18 @@
                 </div>
                 <div class="space-y-4">
                     <div class="flex justify-between items-center">
-                        <span class="text-sm font-bold text-gray-500 uppercase">Size</span>
+                        <span class="text-sm font-bold text-gray-500 uppercase">크기</span>
                         <span id="font-size-val" class="text-sm font-mono font-bold text-blue-600">18px</span>
                     </div>
-                    <input type="range" id="font-size-slider" min="14" max="40" value="18" class="w-full h-1.5 bg-gray-200 dark:bg-gray-700 rounded-lg appearance-none cursor-pointer accent-blue-600">
+                    <input type="range" id="font-size-slider" min="14" max="40" value="18" class="w-full h-1.5 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-600">
                 </div>
             </div>
-            <button id="close-settings" class="w-full py-4 bg-gray-100 dark:bg-gray-800 rounded-2xl font-bold uppercase tracking-widest text-xs">Close</button>
+            <button id="close-settings" class="w-full py-4 bg-gray-100 rounded-2xl font-bold uppercase tracking-widest text-xs">닫기</button>
         </div>
     </div>
 
-    <div id="overlay" class="fixed inset-0 bg-black/40 backdrop-blur-sm z-30 hidden transition-opacity duration-300"></div>
-
     <script>
-        const dbName = "NovelViewerDB_Endless";
+        const dbName = "NovelViewerDB_FinalFix";
         const storeName = "novelStore";
         let db;
 
@@ -158,12 +182,6 @@
         const touchCenter = document.getElementById('touch-center');
         const scrollHint = document.getElementById('scroll-hint');
         
-        const uiElements = {
-            header: document.getElementById('header'),
-            bottomNav: document.getElementById('bottom-nav'),
-            toggleSettings: document.getElementById('toggle-settings')
-        };
-        
         const settingsPanel = document.getElementById('settings-panel');
         const tocPanel = document.getElementById('toc-panel');
         const overlay = document.getElementById('overlay');
@@ -179,42 +197,53 @@
         const fontSizeSlider = document.getElementById('font-size-slider');
         const fontSizeVal = document.getElementById('font-size-val');
 
-        let settings = JSON.parse(localStorage.getItem('viewerSettings_v9')) || {
+        let settings = JSON.parse(localStorage.getItem('viewerSettings_v12')) || {
             theme: 'light', fontFamily: 'font-batang', fontSize: 18, uiVisible: true
         };
         let chapters = [];
         let currentChapterIndex = 0;
-
-        // --- 스크롤 오버 드래그 감지 변수 ---
         let touchStartY = 0;
-        let lastScrollTop = 0;
-        const THRESHOLD = 80; // 당기는 정도 임계값
+        const THRESHOLD = 80;
 
         function applySettings() {
             const isDark = settings.theme === 'dark';
-            document.body.className = isDark ? 'bg-zinc-900 text-gray-200 min-h-screen flex flex-col items-center' : 'bg-white text-gray-900 min-h-screen flex flex-col items-center';
-            document.getElementById('btn-light').className = `px-5 py-2 rounded-lg text-sm font-bold transition-all ${!isDark ? 'bg-white shadow-sm text-black' : 'text-gray-500 hover:text-white'}`;
-            document.getElementById('btn-dark').className = `px-5 py-2 rounded-lg text-sm font-bold transition-all ${isDark ? 'bg-zinc-700 shadow-sm text-white' : 'text-gray-400 hover:text-black'}`;
-            settingsPanel.classList.toggle('dark', isDark);
+            
+            if (isDark) {
+                document.documentElement.classList.add('dark');
+                document.body.className = 'bg-zinc-950 text-zinc-300 min-h-screen flex flex-col items-center dark';
+            } else {
+                document.documentElement.classList.remove('dark');
+                document.body.className = 'bg-white text-gray-900 min-h-screen flex flex-col items-center';
+            }
+            
+            // 설정창 내부 버튼들 클래스 (보스 요청: 설정창 배경은 하양 고정)
+            document.getElementById('btn-light').className = `px-5 py-2 rounded-lg text-sm font-bold transition-all ${!isDark ? 'bg-white shadow-sm text-black' : 'text-gray-400'}`;
+            document.getElementById('btn-dark').className = `px-5 py-2 rounded-lg text-sm font-bold transition-all ${isDark ? 'bg-zinc-700 shadow-sm text-white' : 'text-gray-400'}`;
+            
             contentArea.classList.remove('font-gulim', 'font-batang', 'font-myungjo');
             contentArea.classList.add(settings.fontFamily);
             fontFamilySelect.value = settings.fontFamily;
             contentArea.style.fontSize = settings.fontSize + 'px';
             fontSizeSlider.value = settings.fontSize;
             fontSizeVal.innerText = settings.fontSize + 'px';
+            
             updateUIVisibility();
-            localStorage.setItem('viewerSettings_v9', JSON.stringify(settings));
+            localStorage.setItem('viewerSettings_v12', JSON.stringify(settings));
         }
 
         function updateUIVisibility() {
+            const header = document.getElementById('header');
+            const bottomNav = document.getElementById('bottom-nav');
+            const toggleS = document.getElementById('toggle-settings');
+            
             if (settings.uiVisible) {
-                uiElements.header.classList.remove('ui-hidden');
-                uiElements.bottomNav.classList.remove('ui-hidden-bottom');
-                uiElements.toggleSettings.classList.remove('ui-hidden-right');
+                header.classList.remove('ui-hidden');
+                bottomNav.classList.remove('ui-hidden-bottom');
+                toggleS.classList.remove('ui-hidden-right');
             } else {
-                uiElements.header.classList.add('ui-hidden');
-                uiElements.bottomNav.classList.add('ui-hidden-bottom');
-                uiElements.toggleSettings.classList.add('ui-hidden-right');
+                header.classList.add('ui-hidden');
+                bottomNav.classList.add('ui-hidden-bottom');
+                toggleS.classList.add('ui-hidden-right');
             }
         }
 
@@ -240,11 +269,11 @@
             chapterList.innerHTML = '';
             chapters.forEach((chapter, index) => {
                 const item = document.createElement('div');
-                item.className = `chapter-item ${index === currentChapterIndex ? 'active-chapter' : ''}`;
-                const title = document.createElement('span');
-                title.className = 'flex-grow truncate text-sm font-medium';
-                title.innerText = chapter.title;
-                item.appendChild(title);
+                item.className = `chapter-item p-6 border-b border-gray-100 cursor-pointer hover:bg-blue-50 flex items-center transition-colors`;
+                if (index === currentChapterIndex) {
+                    item.classList.add('bg-blue-50', 'text-blue-600', 'font-bold', 'border-l-4', 'border-l-blue-600');
+                }
+                item.innerText = chapter.title;
                 item.onclick = () => { currentChapterIndex = index; renderChapter(); closeToc(); };
                 chapterList.appendChild(item);
             });
@@ -260,7 +289,7 @@
             prevBtn.disabled = currentChapterIndex === 0;
             nextBtn.disabled = currentChapterIndex === chapters.length - 1;
             buildToc();
-            window.scrollTo(0, 0);
+            window.scrollTo({top: 0, behavior: 'instant'});
             saveToDB({ chapters, currentIndex: currentChapterIndex });
         }
 
@@ -296,11 +325,7 @@
             overlay.classList.add('hidden');
         }
 
-        // --- 무한 스크롤 / 오버 드래그 로직 ---
-        window.addEventListener('touchstart', (e) => {
-            touchStartY = e.touches[0].pageY;
-        }, { passive: true });
-
+        window.addEventListener('touchstart', (e) => { touchStartY = e.touches[0].pageY; }, { passive: true });
         window.addEventListener('touchmove', (e) => {
             if (chapters.length === 0) return;
             const touchY = e.touches[0].pageY;
@@ -309,18 +334,16 @@
             const isAtBottom = window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 1;
 
             if (isAtBottom && pullDistance < -THRESHOLD && currentChapterIndex < chapters.length - 1) {
-                scrollHint.innerText = "다음 회차로 넘어갑니다...";
-                scrollHint.style.bottom = "100px";
+                scrollHint.innerText = "다음 회차로 넘어갑니다";
                 scrollHint.style.top = "auto";
+                scrollHint.style.bottom = "120px";
                 scrollHint.style.opacity = "1";
             } else if (isAtTop && pullDistance > THRESHOLD && currentChapterIndex > 0) {
-                scrollHint.innerText = "이전 회차로 넘어갑니다...";
-                scrollHint.style.top = "100px";
+                scrollHint.innerText = "이전 회차로 넘어갑니다";
                 scrollHint.style.bottom = "auto";
+                scrollHint.style.top = "120px";
                 scrollHint.style.opacity = "1";
-            } else {
-                scrollHint.style.opacity = "0";
-            }
+            } else { scrollHint.style.opacity = "0"; }
         }, { passive: true });
 
         window.addEventListener('touchend', (e) => {
@@ -330,28 +353,21 @@
             const isAtBottom = window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 1;
 
             if (isAtBottom && pullDistance < -THRESHOLD && currentChapterIndex < chapters.length - 1) {
-                currentChapterIndex++;
-                renderChapter();
+                currentChapterIndex++; renderChapter();
             } else if (isAtTop && pullDistance > THRESHOLD && currentChapterIndex > 0) {
-                currentChapterIndex--;
-                renderChapter();
+                currentChapterIndex--; renderChapter();
             }
             scrollHint.style.opacity = "0";
         });
 
-        // 데스크톱 휠 대응
         window.addEventListener('wheel', (e) => {
             if (chapters.length === 0) return;
             const isAtTop = window.scrollY <= 0;
             const isAtBottom = window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 1;
-
-            if (isAtBottom && e.deltaY > 50 && currentChapterIndex < chapters.length - 1) {
-                // 휠은 즉시 반응성이 높으므로 딜레이나 큰 델타값이 필요
-                currentChapterIndex++;
-                renderChapter();
-            } else if (isAtTop && e.deltaY < -50 && currentChapterIndex > 0) {
-                currentChapterIndex--;
-                renderChapter();
+            if (isAtBottom && e.deltaY > 150 && currentChapterIndex < chapters.length - 1) {
+                currentChapterIndex++; renderChapter();
+            } else if (isAtTop && e.deltaY < -150 && currentChapterIndex > 0) {
+                currentChapterIndex--; renderChapter();
             }
         });
 
@@ -370,15 +386,36 @@
         touchCenter.addEventListener('click', () => { settings.uiVisible = !settings.uiVisible; applySettings(); });
         prevBtn.addEventListener('click', () => { if (currentChapterIndex > 0) { currentChapterIndex--; renderChapter(); } });
         nextBtn.addEventListener('click', () => { if (currentChapterIndex < chapters.length - 1) { currentChapterIndex++; renderChapter(); } });
-        toggleBtn.addEventListener('click', () => { settingsPanel.classList.remove('hidden-panel-bottom'); overlay.classList.remove('hidden'); });
-        closeBtn.addEventListener('click', () => { settingsPanel.classList.add('hidden-panel-bottom'); overlay.classList.add('hidden'); });
-        openTocBtn.addEventListener('click', () => { tocPanel.classList.remove('hidden-panel-right'); overlay.classList.remove('hidden'); });
+        
+        toggleBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            settingsPanel.classList.remove('hidden-panel-bottom');
+            overlay.classList.remove('hidden');
+        });
+        
+        closeBtn.addEventListener('click', () => {
+            settingsPanel.classList.add('hidden-panel-bottom');
+            overlay.classList.add('hidden');
+        });
+        
+        openTocBtn.addEventListener('click', () => {
+            tocPanel.classList.remove('hidden-panel-right');
+            overlay.classList.remove('hidden');
+        });
+        
         closeTocBtn.addEventListener('click', closeToc);
-        overlay.addEventListener('click', () => { closeToc(); settingsPanel.classList.add('hidden-panel-bottom'); overlay.classList.add('hidden'); });
+        
+        overlay.addEventListener('click', () => {
+            closeToc();
+            settingsPanel.classList.add('hidden-panel-bottom');
+            overlay.classList.add('hidden');
+        });
+
         document.getElementById('btn-light').addEventListener('click', () => { settings.theme = 'light'; applySettings(); });
         document.getElementById('btn-dark').addEventListener('click', () => { settings.theme = 'dark'; applySettings(); });
         fontFamilySelect.addEventListener('change', (e) => { settings.fontFamily = e.target.value; applySettings(); });
         fontSizeSlider.addEventListener('input', (e) => { settings.fontSize = e.target.value; applySettings(); });
+        
         applySettings();
     </script>
 </body>
