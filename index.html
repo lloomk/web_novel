@@ -1,47 +1,26 @@
+```html
 <!DOCTYPE html>
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Web Novel Viewer</title>
-    <!-- 구글 폰트에서 명조체 불러오기 -->
+    <title>Web Novel Viewer - Auto Save</title>
     <link href="https://fonts.googleapis.com/css2?family=Nanum+Myeongjo:wght@400;700&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        /* 확실한 글꼴 정의 */
         .font-gulim { font-family: 'Gulim', 'Dotum', sans-serif !important; }
         .font-batang { font-family: 'Batang', 'AppleMyungjo', serif !important; }
         .font-myungjo { font-family: 'Nanum Myeongjo', serif !important; }
 
         ::-webkit-scrollbar { width: 8px; }
         ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb {
-            background: #888;
-            border-radius: 4px;
-        }
+        ::-webkit-scrollbar-thumb { background: #888; border-radius: 4px; }
 
-        body {
-            transition: background-color 0.3s, color 0.3s;
-            overflow-x: hidden;
-        }
-
-        /* 본문 영역 스타일 강제 적용 */
-        #content {
-            white-space: pre-wrap;
-            line-height: 1.8;
-            word-break: break-all;
-        }
-
-        #settings-panel {
-            transition: transform 0.3s ease-in-out;
-        }
-        .hidden-panel {
-            transform: translateY(100%);
-        }
-        
-        .nav-btn {
-            @apply px-4 py-2 bg-gray-200 dark:bg-gray-700 rounded-lg hover:opacity-80 transition disabled:opacity-30;
-        }
+        body { transition: background-color 0.3s, color 0.3s; overflow-x: hidden; }
+        #content { white-space: pre-wrap; line-height: 1.8; word-break: break-all; }
+        #settings-panel { transition: transform 0.3s ease-in-out; }
+        .hidden-panel { transform: translateY(100%); }
+        .nav-btn { @apply px-4 py-2 bg-gray-200 dark:bg-gray-700 rounded-lg hover:opacity-80 transition disabled:opacity-30; }
     </style>
 </head>
 <body class="bg-white text-gray-900 min-h-screen flex flex-col items-center">
@@ -51,34 +30,31 @@
             <h1 class="text-xl font-bold">Viewer</h1>
             <span id="chapter-indicator" class="text-sm bg-blue-100 text-blue-800 px-2 py-0.5 rounded dark:bg-blue-900 dark:text-blue-100 hidden"></span>
         </div>
-        <label class="cursor-pointer bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition">
-            파일 열기
-            <input type="file" id="file-input" class="hidden" accept=".txt">
-        </label>
+        <div class="flex gap-2">
+            <label class="cursor-pointer bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition">
+                파일 열기
+                <input type="file" id="file-input" class="hidden" accept=".txt">
+            </label>
+        </div>
     </header>
 
     <main class="w-full max-w-3xl px-6 py-10 flex-grow">
         <div id="viewer-placeholder" class="text-center mt-20 text-gray-500">
-            <p class="text-lg">보스, 읽을 파일을 선택해줘.</p>
+            <p class="text-lg font-bold">어서 와, 보스!</p>
+            <p class="text-sm mt-2">파일을 한 번만 넣어두면 다음에 올 때도 자동으로 불러올게.</p>
         </div>
 
         <div id="viewer-container" class="hidden">
-            <!-- 글꼴이 적용될 실제 영역 -->
             <div id="content" class="content-area font-batang"></div>
-            
             <div class="mt-12 flex justify-between items-center pb-20 border-t pt-8 border-gray-200 dark:border-gray-700">
                 <button id="prev-btn" class="nav-btn">이전화</button>
-                <div id="chapter-list-container" class="flex flex-col items-center">
-                    <span id="page-info" class="text-sm mb-2">1 / 1</span>
-                </div>
+                <span id="page-info" class="text-sm">1 / 1</span>
                 <button id="next-btn" class="nav-btn">다음화</button>
             </div>
         </div>
     </main>
 
-    <button id="toggle-settings" class="fixed bottom-6 right-6 w-12 h-12 bg-gray-800 text-white rounded-full shadow-lg flex items-center justify-center hover:scale-110 transition z-20">
-        ⚙️
-    </button>
+    <button id="toggle-settings" class="fixed bottom-6 right-6 w-12 h-12 bg-gray-800 text-white rounded-full shadow-lg flex items-center justify-center hover:scale-110 transition z-20">⚙️</button>
 
     <div id="settings-panel" class="fixed bottom-0 left-0 w-full bg-gray-100 border-t border-gray-300 p-6 z-30 hidden-panel shadow-2xl dark:bg-gray-800 dark:border-gray-700 dark:text-white flex flex-col items-center">
         <div class="w-full max-w-md space-y-6">
@@ -86,15 +62,13 @@
                 <h2 class="text-lg font-bold">환경 설정</h2>
                 <button id="close-settings" class="text-xl">&times;</button>
             </div>
-
             <div class="flex justify-between items-center">
                 <span>테마 모드</span>
                 <div class="flex gap-2">
-                    <button id="btn-light" class="px-4 py-1 rounded border border-gray-400 hover:bg-white hover:text-black transition">라이트</button>
-                    <button id="btn-dark" class="px-4 py-1 rounded border border-gray-400 bg-gray-900 text-white hover:bg-black transition">다크</button>
+                    <button id="btn-light" class="px-4 py-1 rounded border border-gray-400">라이트</button>
+                    <button id="btn-dark" class="px-4 py-1 rounded border border-gray-400 bg-gray-900 text-white">다크</button>
                 </div>
             </div>
-
             <div class="flex justify-between items-center">
                 <span>글꼴 선택</span>
                 <select id="font-family-select" class="bg-white dark:bg-gray-700 border border-gray-400 rounded px-2 py-1 text-black dark:text-white">
@@ -103,7 +77,6 @@
                     <option value="font-myungjo">명조체</option>
                 </select>
             </div>
-
             <div class="flex flex-col gap-2">
                 <div class="flex justify-between">
                     <span>글자 크기</span>
@@ -115,68 +88,77 @@
     </div>
 
     <script>
+        const dbName = "NovelViewerDB";
+        const storeName = "novelStore";
+        let db;
+
+        // DB 초기화
+        const request = indexedDB.open(dbName, 1);
+        request.onupgradeneeded = (e) => {
+            db = e.target.result;
+            db.createObjectStore(storeName);
+        };
+        request.onsuccess = (e) => {
+            db = e.target.result;
+            loadLastSession(); // DB 열리면 데이터 로드
+        };
+
         const fileInput = document.getElementById('file-input');
         const contentArea = document.getElementById('content');
         const placeholder = document.getElementById('viewer-placeholder');
         const viewerContainer = document.getElementById('viewer-container');
         const chapterIndicator = document.getElementById('chapter-indicator');
         const pageInfo = document.getElementById('page-info');
-        
         const settingsPanel = document.getElementById('settings-panel');
         const toggleBtn = document.getElementById('toggle-settings');
         const closeBtn = document.getElementById('close-settings');
-        
         const prevBtn = document.getElementById('prev-btn');
         const nextBtn = document.getElementById('next-btn');
-
         const fontFamilySelect = document.getElementById('font-family-select');
         const fontSizeSlider = document.getElementById('font-size-slider');
         const fontSizeVal = document.getElementById('font-size-val');
 
-        // 설정 관리
-        let settings = JSON.parse(localStorage.getItem('viewerSettings_v4')) || {
-            theme: 'light',
-            fontFamily: 'font-batang',
-            fontSize: 18
+        let settings = JSON.parse(localStorage.getItem('viewerSettings_v5')) || {
+            theme: 'light', fontFamily: 'font-batang', fontSize: 18
         };
-
         let chapters = [];
         let currentChapterIndex = 0;
 
         function applySettings() {
             if (settings.theme === 'dark') {
                 document.body.className = 'bg-zinc-900 text-gray-300 min-h-screen flex flex-col items-center';
-                document.getElementById('header').classList.add('border-gray-700', 'bg-zinc-900');
-                document.getElementById('header').classList.remove('border-gray-200', 'bg-white');
+                document.getElementById('header').className = 'w-full max-w-3xl p-4 flex justify-between items-center sticky top-0 z-10 border-b border-gray-700 bg-zinc-900';
                 settingsPanel.classList.add('dark');
             } else {
                 document.body.className = 'bg-white text-gray-900 min-h-screen flex flex-col items-center';
-                document.getElementById('header').classList.remove('border-gray-700', 'bg-zinc-900');
-                document.getElementById('header').classList.add('border-gray-200', 'bg-white');
+                document.getElementById('header').className = 'w-full max-w-3xl p-4 flex justify-between items-center sticky top-0 z-10 border-b border-gray-200 bg-white';
                 settingsPanel.classList.remove('dark');
             }
-
             contentArea.classList.remove('font-gulim', 'font-batang', 'font-myungjo');
             contentArea.classList.add(settings.fontFamily);
             fontFamilySelect.value = settings.fontFamily;
-
             contentArea.style.fontSize = settings.fontSize + 'px';
             fontSizeSlider.value = settings.fontSize;
             fontSizeVal.innerText = settings.fontSize + 'px';
-
-            localStorage.setItem('viewerSettings_v4', JSON.stringify(settings));
+            localStorage.setItem('viewerSettings_v5', JSON.stringify(settings));
         }
 
-        function saveCurrentState() {
-            const state = {
-                chapters: chapters,
-                currentIndex: currentChapterIndex
+        async function saveToDB(data) {
+            const tx = db.transaction(storeName, "readwrite");
+            tx.objectStore(storeName).put(data, "lastNovel");
+        }
+
+        function loadLastSession() {
+            const tx = db.transaction(storeName, "readonly");
+            const getRequest = tx.objectStore(storeName).get("lastNovel");
+            getRequest.onsuccess = () => {
+                const data = getRequest.result;
+                if (data && data.chapters) {
+                    chapters = data.chapters;
+                    currentChapterIndex = data.currentIndex || 0;
+                    showViewer();
+                }
             };
-            try {
-                localStorage.setItem('viewerLastNovel', JSON.stringify(state));
-            } catch (e) {
-                console.error("파일이 너무 커서 로컬 저장소에 저장할 수 없습니다.", e);
-            }
         }
 
         function renderChapter() {
@@ -189,9 +171,13 @@
             prevBtn.disabled = currentChapterIndex === 0;
             nextBtn.disabled = currentChapterIndex === chapters.length - 1;
             window.scrollTo(0, 0);
-            
-            // 현재 상태 저장
-            saveCurrentState();
+            saveToDB({ chapters, currentIndex: currentChapterIndex });
+        }
+
+        function showViewer() {
+            placeholder.classList.add('hidden');
+            viewerContainer.classList.remove('hidden');
+            renderChapter();
         }
 
         function splitChapters(text) {
@@ -222,35 +208,15 @@
             if (!file) return;
             const reader = new FileReader();
             reader.onload = (event) => {
-                const fullText = event.target.result;
-                chapters = splitChapters(fullText);
+                chapters = splitChapters(event.target.result);
                 currentChapterIndex = 0;
-                placeholder.classList.add('hidden');
-                viewerContainer.classList.remove('hidden');
-                renderChapter();
+                showViewer();
             };
             reader.readAsText(file);
         });
 
-        // 페이지 로드 시 이전 데이터 복구
-        window.onload = () => {
-            applySettings();
-            const savedState = localStorage.getItem('viewerLastNovel');
-            if (savedState) {
-                const state = JSON.parse(savedState);
-                if (state.chapters && state.chapters.length > 0) {
-                    chapters = state.chapters;
-                    currentChapterIndex = state.currentIndex || 0;
-                    placeholder.classList.add('hidden');
-                    viewerContainer.classList.remove('hidden');
-                    renderChapter();
-                }
-            }
-        };
-
         prevBtn.addEventListener('click', () => { if (currentChapterIndex > 0) { currentChapterIndex--; renderChapter(); } });
         nextBtn.addEventListener('click', () => { if (currentChapterIndex < chapters.length - 1) { currentChapterIndex++; renderChapter(); } });
-
         toggleBtn.addEventListener('click', () => settingsPanel.classList.remove('hidden-panel'));
         closeBtn.addEventListener('click', () => settingsPanel.classList.add('hidden-panel'));
         document.getElementById('btn-light').addEventListener('click', () => { settings.theme = 'light'; applySettings(); });
@@ -258,11 +224,9 @@
         fontFamilySelect.addEventListener('change', (e) => { settings.fontFamily = e.target.value; applySettings(); });
         fontSizeSlider.addEventListener('input', (e) => { settings.fontSize = e.target.value; applySettings(); });
         
-        document.addEventListener('click', (e) => {
-            if (!settingsPanel.contains(e.target) && e.target !== toggleBtn) {
-                settingsPanel.classList.add('hidden-panel');
-            }
-        });
+        applySettings();
     </script>
 </body>
 </html>
+
+```
