@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Web Novel Viewer - Auto Save</title>
+    <title>Web Novel Viewer - Chapters</title>
     <link href="https://fonts.googleapis.com/css2?family=Nanum+Myeongjo:wght@400;700&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
@@ -18,26 +18,39 @@
 
         body { transition: background-color 0.3s, color 0.3s; overflow-x: hidden; }
         #content { white-space: pre-wrap; line-height: 1.8; word-break: break-all; }
-        #settings-panel { transition: transform 0.3s ease-in-out; }
-        .hidden-panel { transform: translateY(100%); }
+        
+        /* 패널 공통 애니메이션 */
+        .panel-transition { transition: transform 0.3s ease-in-out; }
+        .hidden-panel-bottom { transform: translateY(100%); }
+        .hidden-panel-right { transform: translateX(100%); }
+        
         .nav-btn { @apply px-4 py-2 bg-gray-200 dark:bg-gray-700 rounded-lg hover:opacity-80 transition disabled:opacity-30; }
+        
+        /* 목차 아이템 스타일 */
+        .chapter-item { @apply p-4 border-b border-gray-100 dark:border-gray-700 cursor-pointer hover:bg-blue-50 dark:hover:bg-gray-700 transition; }
+        .active-chapter { @apply bg-blue-100 dark:bg-blue-900 font-bold text-blue-600 dark:text-blue-200; }
     </style>
 </head>
 <body class="bg-white text-gray-900 min-h-screen flex flex-col items-center">
 
-    <header id="header" class="w-full max-w-3xl p-4 flex justify-between items-center sticky top-0 bg-inherit z-10 border-b border-gray-200">
+    <!-- 상단 헤더 -->
+    <header id="header" class="w-full max-w-3xl p-4 flex justify-between items-center sticky top-0 z-10 border-b border-gray-200 bg-white">
         <div class="flex items-center gap-2">
-            <h1 class="text-xl font-bold">Viewer</h1>
-            <span id="chapter-indicator" class="text-sm bg-blue-100 text-blue-800 px-2 py-0.5 rounded dark:bg-blue-900 dark:text-blue-100 hidden"></span>
+            <button id="open-toc" class="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition hidden">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+            </button>
+            <h1 class="text-xl font-bold hidden sm:block">Viewer</h1>
+            <span id="chapter-indicator" class="text-sm bg-blue-100 text-blue-800 px-2 py-0.5 rounded dark:bg-blue-900 dark:text-blue-100 hidden truncate max-w-[150px]"></span>
         </div>
         <div class="flex gap-2">
-            <label class="cursor-pointer bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition">
+            <label class="cursor-pointer bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition text-sm">
                 파일 열기
                 <input type="file" id="file-input" class="hidden" accept=".txt">
             </label>
         </div>
     </header>
 
+    <!-- 뷰어 영역 -->
     <main class="w-full max-w-3xl px-6 py-10 flex-grow">
         <div id="viewer-placeholder" class="text-center mt-20 text-gray-500">
             <p class="text-lg font-bold">어서 와, 보스!</p>
@@ -54,9 +67,22 @@
         </div>
     </main>
 
+    <!-- 플로팅 설정 버튼 -->
     <button id="toggle-settings" class="fixed bottom-6 right-6 w-12 h-12 bg-gray-800 text-white rounded-full shadow-lg flex items-center justify-center hover:scale-110 transition z-20">⚙️</button>
 
-    <div id="settings-panel" class="fixed bottom-0 left-0 w-full bg-gray-100 border-t border-gray-300 p-6 z-30 hidden-panel shadow-2xl dark:bg-gray-800 dark:border-gray-700 dark:text-white flex flex-col items-center">
+    <!-- 목차 패널 (우측 사이드 슬라이드) -->
+    <div id="toc-panel" class="fixed top-0 right-0 h-full w-80 bg-white dark:bg-gray-800 shadow-2xl z-40 panel-transition hidden-panel-right border-l border-gray-200 dark:border-gray-700 flex flex-col">
+        <div class="p-4 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center">
+            <h2 class="font-bold text-lg dark:text-white">목차</h2>
+            <button id="close-toc" class="text-2xl dark:text-white">&times;</button>
+        </div>
+        <div id="chapter-list" class="flex-grow overflow-y-auto dark:text-gray-300">
+            <!-- 회차 목록이 여기에 생성됨 -->
+        </div>
+    </div>
+
+    <!-- 설정 패널 (하단 슬라이드) -->
+    <div id="settings-panel" class="fixed bottom-0 left-0 w-full bg-gray-100 border-t border-gray-300 p-6 z-30 panel-transition hidden-panel-bottom shadow-2xl dark:bg-gray-800 dark:border-gray-700 dark:text-white flex flex-col items-center">
         <div class="w-full max-w-md space-y-6">
             <div class="flex justify-between items-center">
                 <h2 class="text-lg font-bold">환경 설정</h2>
@@ -87,6 +113,9 @@
         </div>
     </div>
 
+    <!-- 배경 오버레이 (목차 열릴 때) -->
+    <div id="overlay" class="fixed inset-0 bg-black opacity-50 z-30 hidden"></div>
+
     <script>
         const dbName = "NovelViewerDB";
         const storeName = "novelStore";
@@ -100,7 +129,7 @@
         };
         request.onsuccess = (e) => {
             db = e.target.result;
-            loadLastSession(); // DB 열리면 데이터 로드
+            loadLastSession();
         };
 
         const fileInput = document.getElementById('file-input');
@@ -109,16 +138,25 @@
         const viewerContainer = document.getElementById('viewer-container');
         const chapterIndicator = document.getElementById('chapter-indicator');
         const pageInfo = document.getElementById('page-info');
+        
         const settingsPanel = document.getElementById('settings-panel');
+        const tocPanel = document.getElementById('toc-panel');
+        const overlay = document.getElementById('overlay');
+        
         const toggleBtn = document.getElementById('toggle-settings');
         const closeBtn = document.getElementById('close-settings');
+        const openTocBtn = document.getElementById('open-toc');
+        const closeTocBtn = document.getElementById('close-toc');
+        
         const prevBtn = document.getElementById('prev-btn');
         const nextBtn = document.getElementById('next-btn');
+        const chapterList = document.getElementById('chapter-list');
+        
         const fontFamilySelect = document.getElementById('font-family-select');
         const fontSizeSlider = document.getElementById('font-size-slider');
         const fontSizeVal = document.getElementById('font-size-val');
 
-        let settings = JSON.parse(localStorage.getItem('viewerSettings_v5')) || {
+        let settings = JSON.parse(localStorage.getItem('viewerSettings_v6')) || {
             theme: 'light', fontFamily: 'font-batang', fontSize: 18
         };
         let chapters = [];
@@ -140,7 +178,7 @@
             contentArea.style.fontSize = settings.fontSize + 'px';
             fontSizeSlider.value = settings.fontSize;
             fontSizeVal.innerText = settings.fontSize + 'px';
-            localStorage.setItem('viewerSettings_v5', JSON.stringify(settings));
+            localStorage.setItem('viewerSettings_v6', JSON.stringify(settings));
         }
 
         async function saveToDB(data) {
@@ -161,6 +199,21 @@
             };
         }
 
+        function buildToc() {
+            chapterList.innerHTML = '';
+            chapters.forEach((chapter, index) => {
+                const item = document.createElement('div');
+                item.className = `chapter-item ${index === currentChapterIndex ? 'active-chapter' : ''}`;
+                item.innerText = chapter.title;
+                item.onclick = () => {
+                    currentChapterIndex = index;
+                    renderChapter();
+                    closeToc();
+                };
+                chapterList.appendChild(item);
+            });
+        }
+
         function renderChapter() {
             if (chapters.length === 0) return;
             const chapter = chapters[currentChapterIndex];
@@ -170,6 +223,14 @@
             pageInfo.innerText = `${currentChapterIndex + 1} / ${chapters.length}`;
             prevBtn.disabled = currentChapterIndex === 0;
             nextBtn.disabled = currentChapterIndex === chapters.length - 1;
+            
+            // 목차 하이라이트 업데이트
+            const items = chapterList.querySelectorAll('.chapter-item');
+            items.forEach((item, idx) => {
+                if (idx === currentChapterIndex) item.classList.add('active-chapter');
+                else item.classList.remove('active-chapter');
+            });
+
             window.scrollTo(0, 0);
             saveToDB({ chapters, currentIndex: currentChapterIndex });
         }
@@ -177,6 +238,8 @@
         function showViewer() {
             placeholder.classList.add('hidden');
             viewerContainer.classList.remove('hidden');
+            openTocBtn.classList.remove('hidden');
+            buildToc();
             renderChapter();
         }
 
@@ -203,6 +266,11 @@
             return result;
         }
 
+        function closeToc() {
+            tocPanel.classList.add('hidden-panel-right');
+            overlay.classList.add('hidden');
+        }
+
         fileInput.addEventListener('change', (e) => {
             const file = e.target.files[0];
             if (!file) return;
@@ -215,10 +283,23 @@
             reader.readAsText(file);
         });
 
+        // 이벤트 리스너
         prevBtn.addEventListener('click', () => { if (currentChapterIndex > 0) { currentChapterIndex--; renderChapter(); } });
         nextBtn.addEventListener('click', () => { if (currentChapterIndex < chapters.length - 1) { currentChapterIndex++; renderChapter(); } });
-        toggleBtn.addEventListener('click', () => settingsPanel.classList.remove('hidden-panel'));
-        closeBtn.addEventListener('click', () => settingsPanel.classList.add('hidden-panel'));
+        
+        toggleBtn.addEventListener('click', () => settingsPanel.classList.remove('hidden-panel-bottom'));
+        closeBtn.addEventListener('click', () => settingsPanel.classList.add('hidden-panel-bottom'));
+        
+        openTocBtn.addEventListener('click', () => {
+            tocPanel.classList.remove('hidden-panel-right');
+            overlay.classList.remove('hidden');
+        });
+        closeTocBtn.addEventListener('click', closeToc);
+        overlay.addEventListener('click', () => {
+            closeToc();
+            settingsPanel.classList.add('hidden-panel-bottom');
+        });
+
         document.getElementById('btn-light').addEventListener('click', () => { settings.theme = 'light'; applySettings(); });
         document.getElementById('btn-dark').addEventListener('click', () => { settings.theme = 'dark'; applySettings(); });
         fontFamilySelect.addEventListener('change', (e) => { settings.fontFamily = e.target.value; applySettings(); });
